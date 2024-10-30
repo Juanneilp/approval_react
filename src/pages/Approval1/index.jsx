@@ -9,6 +9,7 @@ const Approval1 = () => {
   const [inputsPayreq, setInputsPayreq] = useState({
     DateFrom: "",
     DateTo: "",
+    DDocType: "",
   });
   const [isLoading, setIsLoading] = useState(false); // State untuk loading
   const [errorMessage, setErrorMessage] = useState(""); // State untuk error
@@ -95,19 +96,21 @@ const formatDate = (dateStr) => {
       const formattedDateFrom = formatDateToYYYYMMDD(inputsPayreq.DateFrom);
       const formattedDateTo = formatDateToYYYYMMDD(inputsPayreq.DateTo);
 
-      const response = await fetch(
-        //`https://localhost:50000/b1s/v1/PAYREQ?$filter= U_SOL_STATUS eq '1' and U_SOL_POSTDATE ge '${formattedDateFrom}' and U_SOL_POSTDATE le '${formattedDateTo}'`,
-        `https://localhost:50000/b1s/v1/PAYREQ?$filter= U_SOL_POSTDATE ge '${formattedDateFrom}' and U_SOL_POSTDATE le '${formattedDateTo}'`,
-        
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: cookieHeader,
-          },
-          credentials: "include",
-        }
-      );
+      // Membuat URL berdasarkan apakah DDocType diisi atau tidak
+      const searchUrl = `https://localhost:50000/b1s/v1/PAYREQ?$filter= U_SOL_POSTDATE ge '${formattedDateFrom}' and U_SOL_POSTDATE le '${formattedDateTo}'`;
+      const url = inputsPayreq.DDocType 
+        ? `${searchUrl} and U_SOL_DDOCTYPE eq '${inputsPayreq.DDocType}'`
+        : searchUrl;
+
+      // Fetch data menggunakan URL yang sudah dibuat
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: cookieHeader,
+        },
+        credentials: "include",
+      });
 
       if (response.ok) {
         const result = await response.json();
@@ -311,8 +314,8 @@ const formatDate = (dateStr) => {
     try {
       await Promise.all(patchPromises);
       const requestBody = {
-        U_SOL_PERFROM: inputsPayreq.DateFrom + "T00:00:00Z",
-        U_SOL_PERTO: inputsPayreq.DateTo + "T00:00:00Z",
+        U_SOL_PERFROM: inputsPayreq.DateFrom,
+        U_SOL_PERTO: inputsPayreq.DateTo,
         U_SOL_DOCTYPE: "Department",
         U_SOL_DDOCTYPE: "FA",
         U_SOL_APPDATE: new Date().toISOString(),
@@ -324,25 +327,26 @@ const formatDate = (dateStr) => {
         SOL_PAYAPP_DCollection: selectedDocumentsData,
       };
 
-      // const postResponse = await fetch("https://localhost:50000/b1s/v1/PAYAPP", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     Cookie: cookieHeader,
-      //   },
-      //   body: JSON.stringify(requestBody),
-      //   credentials: "include",
-      // });
+      const postResponse = await fetch("https://localhost:50000/b1s/v1/PAYAPP", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: cookieHeader,
+        },
+        body: JSON.stringify(requestBody),
+        credentials: "include",
+      });
 
-      // if (postResponse.ok) {
-      //   Swal.fire("Success", "Documents updated and posted successfully!", "success");
-      //   setSelectedDocs([]);
-      //   await handleSearch();
-      //   await sendEmail(); // Send email after successful POST
-      // } else {
-      //   const errorData = await postResponse.json();
-      //   setErrorMessage(errorData.message || "Failed to post data");
-      // }
+      if (postResponse.ok) {
+        Swal.fire("Success", "Documents updated and posted successfully!", "success");
+        setSelectedDocs([]);
+        await handleSearch();
+        await sendEmail(); // Send email after successful POST
+      } else {
+        const errorData = await postResponse.json();
+        setErrorMessage(errorData.message || "Failed to post data");
+      }
+
       await sendEmail(); // Send email after successful POST
     } catch (error) {
       setErrorMessage("Network error, please try again later.");
@@ -468,6 +472,12 @@ const formatDate = (dateStr) => {
                         type="text"
                         className="form-control"
                         placeholder="Enter Document Type"
+                        name="DDocType"
+                        id="DDocType"
+                        required
+                        autoComplete="off"
+                        autoFocus
+                        onChange={(e) => handleInputPayreq(e.target.value, e.target.name)}
                       />
                   </div>
 
@@ -528,7 +538,7 @@ const formatDate = (dateStr) => {
                             <td>{doc.U_SOL_POSTDATE}</td>
                             <td>{doc.Object}</td>
                             <td>{doc.U_SOL_TOTPAID}</td>
-                            <td>{doc.U_SOL_DOCTYPE}</td>
+                            <td>{doc.U_SOL_DOCTYPE + " - " + doc.U_SOL_DDOCTYPE}</td>
                             <td>{doc.U_SOL_CASHFLOW}</td>
                             <td>{doc.U_SOL_RMK}</td>
                             <td>{doc.U_SOL_REQ}</td>

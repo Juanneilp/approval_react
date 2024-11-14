@@ -170,276 +170,489 @@ const Approval2 = () => {
     });
   };
 
-  const sendEmail = async () => {
-    setIsLoading(true);
+  // const sendEmail = async () => {
+  //   setIsLoading(true);
 
-    try {
-      const token = sessionStorage.getItem("authToken");
-      const cookieHeader = "B1SESSION=" + token + "; ROUTEID=.node6";
+  //   try {
+  //     const token = sessionStorage.getItem("authToken");
+  //     const cookieHeader = "B1SESSION=" + token + "; ROUTEID=.node6";
 
-      // Lakukan GET request untuk setiap DocEntry yang dicentang
-      const queryPromises = selectedDocs.map((docEntry) =>
-        fetch(
-          `https://localhost:50000/b1s/v1/SQLQueries('GetPAYAPP2')/List?DocEntry=${docEntry}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Cookie: cookieHeader,
-            },
-            credentials: "include",
-          }
-        ).then((response) => {
-          if (!response.ok)
-            throw new Error("Gagal mengambil data untuk DocEntry " + docEntry);
-          return response.json();
-        })
-      );
+  //     // Lakukan GET request untuk setiap DocEntry yang dicentang
+  //     const queryPromises = selectedDocs.map((docEntry) =>
+  //       fetch(
+  //         `https://localhost:50000/b1s/v1/SQLQueries('GetPAYAPP2')/List?DocEntry=${docEntry}`,
+  //         {
+  //           method: "GET",
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //             Cookie: cookieHeader,
+  //           },
+  //           credentials: "include",
+  //         }
+  //       ).then((response) => {
+  //         if (!response.ok)
+  //           throw new Error("Gagal mengambil data untuk DocEntry " + docEntry);
+  //         return response.json();
+  //       })
+  //     );
 
-      const queryResults = await Promise.all(queryPromises);
-      console.log("Query Results:", queryResults); // Debugging seluruh struktur data
+  //     const queryResults = await Promise.all(queryPromises);
+  //     console.log("Query Results:", queryResults); // Debugging seluruh struktur data
 
-      // Debug nilai tanggal untuk memastikan formatnya benar
-      queryResults.forEach((result, index) => {
-          console.log(`Tanggal PAYAPP_PerFrom [${index}]:`, result.value[0]?.PAYAPP_PerFrom);
-          console.log(`Tanggal PAYAPP_PerTo [${index}]:`, result.value[0]?.PAYAPP_PerTo);
-          console.log(`Tanggal PAYAPP_AppDate [${index}]:`, result.value[0]?.PAYAPP_AppDate);
-          console.log(`Tanggal PAYAPP_Date_D [${index}]:`, result.value[0]?.PAYAPP_Date_D);
-      });
+  //     // Debug nilai tanggal untuk memastikan formatnya benar
+  //     queryResults.forEach((result, index) => {
+  //         console.log(`Tanggal PAYAPP_PerFrom [${index}]:`, result.value[0]?.PAYAPP_PerFrom);
+  //         console.log(`Tanggal PAYAPP_PerTo [${index}]:`, result.value[0]?.PAYAPP_PerTo);
+  //         console.log(`Tanggal PAYAPP_AppDate [${index}]:`, result.value[0]?.PAYAPP_AppDate);
+  //         console.log(`Tanggal PAYAPP_Date_D [${index}]:`, result.value[0]?.PAYAPP_Date_D);
+  //     });
 
 
-      // Mengambil Value dari hasil GET Query
-      //Table 1
-      const PAYAPP_PerFrom = queryResults
-        .map((result) => formatDate(result.value[0]?.PAYAPP_PerFrom || null))
-        .join(", ");
-      const PAYAPP_PerTo = queryResults
-        .map((result) => formatDate(result.value[0]?.PAYAPP_PerTo))
-        .join(", ");
-      const PAYAPP_DocType = queryResults
-        .map((result) => result.value[0]?.PAYAPP_DocType)
-        .join(", ");
-      const PAYAPP_DDocType = queryResults
-        .map((result) => result.value[0]?.PAYAPP_DDocType)
-        .join(", ");
-      const PAYAPP_SeriesName = queryResults
-        .map((result) => result.value[0]?.PAYAPP_SeriesName)
-        .join(", ");
-      const PAYAPP_DocNum = queryResults
-        .map((result) => result.value[0]?.PAYAPP_DocNum)
-        .join(", ");
-      const PAYAPP_Decision = queryResults
-        .map((result) => result.value[0]?.PAYAPP_Decision)
-        .join(", ");
-      const PAYAPP_AppDate = queryResults
-        .map((result) => formatDate(result.value[0]?.PAYAPP_AppDate))
-        .join(", ");
-      const PAYAPP_Remarks = queryResults
-        .map((result) => result.value[0]?.PAYAPP_Remarks)
-        .join(", ");
+  //     // Mengambil Value dari hasil GET Query
+  //     //Table 1
+  //     const PAYAPP_PerFrom = queryResults
+  //       .map((result) => formatDate(result.value[0]?.PAYAPP_PerFrom || null))
+  //       .join(", ");
+  //     const PAYAPP_PerTo = queryResults
+  //       .map((result) => formatDate(result.value[0]?.PAYAPP_PerTo))
+  //       .join(", ");
+  //     const PAYAPP_DocType = queryResults
+  //       .map((result) => result.value[0]?.PAYAPP_DocType)
+  //       .join(", ");
+  //     const PAYAPP_DDocType = queryResults
+  //       .map((result) => result.value[0]?.PAYAPP_DDocType)
+  //       .join(", ");
+  //       const PAYAPP_Department = queryResults
+  //       .map((result) => result.value[0]?.PAYAPP_Department)
+  //       .join(", ");
+  //     const PAYAPP_SeriesName = queryResults
+  //       .map((result) => result.value[0]?.PAYAPP_SeriesName)
+  //       .join(", ");
+  //     const PAYAPP_DocNum = queryResults
+  //       .map((result) => result.value[0]?.PAYAPP_DocNum)
+  //       .join(", ");
+  //     const PAYAPP_Decision = queryResults
+  //       .map((result) => result.value[0]?.PAYAPP_Decision)
+  //       .join(", ");
+  //     const PAYAPP_AppDate = queryResults
+  //       .map((result) => formatDate(result.value[0]?.PAYAPP_AppDate))
+  //       .join(", ");
+  //     const PAYAPP_Remarks = queryResults
+  //       .map((result) => result.value[0]?.PAYAPP_Remarks)
+  //       .join(", ");
 
-      //Table 2
-      const PAYAPP_DocNum_D = queryResults
-        .map((result) => result.value[0]?.PAYAPP_DocNum_D)
-        .join(", ");
-      const PAYAPP_Date_D = queryResults
-        .map((result) => formatDate(result.value[0]?.PAYAPP_Date_D))
-        .join(", ");
-      const PAYAPP_Type_D = queryResults
-        .map((result) => result.value[0]?.PAYAPP_Type_D)
-        .join(", ");
-      const PAYAPP_Total_D = queryResults
-        .map((result) => result.value[0]?.PAYAPP_Total_D)
-        .join(", ");
-      const PAYAPP_CashFlow_D = queryResults
-        .map((result) => result.value[0]?.PAYAPP_CashFlow_D)
-        .join(", ");
-      const PAYAPP_RMK_D = queryResults
-        .map((result) => result.value[0]?.PAYAPP_RMK_D)
-        .join(", ");
-      const PAYAPP_REQ_D = queryResults
-        .map((result) => result.value[0]?.PAYAPP_REQ_D)
-        .join(", ");
+  //     //Table 2
+  //     const PAYAPP_DocNum_D = queryResults
+  //       .map((result) => result.value[0]?.PAYAPP_DocNum_D)
+  //       .join(", ");
+  //     const PAYAPP_Date_D = queryResults
+  //       .map((result) => formatDate(result.value[0]?.PAYAPP_Date_D))
+  //       .join(", ");
+  //     const PAYAPP_Type_D = queryResults
+  //       .map((result) => result.value[0]?.PAYAPP_Type_D)
+  //       .join(", ");
+  //       const PAYAPP_Department_D = queryResults
+  //       .map((result) => result.value[0]?.PAYAPP_Department_D)
+  //       .join(", ");
+  //     const PAYAPP_Total_D = queryResults
+  //       .map((result) => result.value[0]?.PAYAPP_Total_D)
+  //       .join(", ");
+  //     const PAYAPP_CashFlow_D = queryResults
+  //       .map((result) => result.value[0]?.PAYAPP_CashFlow_D)
+  //       .join(", ");
+  //     const PAYAPP_RMK_D = queryResults
+  //       .map((result) => result.value[0]?.PAYAPP_RMK_D)
+  //       .join(", ");
+  //     const PAYAPP_REQ_D = queryResults
+  //       .map((result) => result.value[0]?.PAYAPP_REQ_D)
+  //       .join(", ");
 
-      const PAYREQ_DocNum_H = queryResults
-        .map((result) => result.value[0]?.PAYREQ_DocNum_H)
-        .join(", ");
-      //Table 3 (Looping)
-      // Data untuk Table 3 - Looping
-      const table3Data = queryResults
-        .flatMap((result, index) =>
-          result.value.map(
-            (item, subIndex) => `
-        <tr>
-          <td>${index + subIndex + 1}</td>
-          <td>${item.PAYREQ_VenCode || "-"}</td>
-          <td>${item.PAYREQ_VenName || "-"}</td>
-          <td>${item.PAYREQ_DocNum || "-"}</td>
-          <td>${item.PAYREQ_Type || "-"}</td>
-          <td>${formatDate(item.PAYREQ_Date) || "-"}</td>
-          <td>${item.PAYREQ_Total || "-"}</td>
-          <td>${item.PAYREQ_BalDue || "-"}</td>
-          <td>${item.PAYREQ_PayAmou || "-"}</td>
-          <td>${item.PAYREQ_BankCharge || "-"}</td>
-          <td>${item.PAYREQ_RMK_INV || "-"}</td>
-        </tr>
-      `
-          )
-        )
-        .join("");
+  //     const PAYREQ_DocNum_H = queryResults
+  //       .map((result) => result.value[0]?.PAYREQ_DocNum_H)
+  //       .join(", ");
+  //     //Table 3 (Looping)
+  //     // Data untuk Table 3 - Looping
+  //     const table3Data = queryResults
+  //       .flatMap((result, index) =>
+  //         result.value.map(
+  //           (item, subIndex) => `
+  //       <tr>
+  //         <td>${index + subIndex + 1}</td>
+  //         <td>${item.PAYREQ_VenCode || "-"}</td>
+  //         <td>${item.PAYREQ_VenName || "-"}</td>
+  //         <td>${item.PAYREQ_DocNum || "-"}</td>
+  //         <td>${item.PAYREQ_Type || "-"}</td>
+  //         <td>${formatDate(item.PAYREQ_Date) || "-"}</td>
+  //         <td>${item.PAYREQ_Total || "-"}</td>
+  //         <td>${item.PAYREQ_BalDue || "-"}</td>
+  //         <td>${item.PAYREQ_PayAmou || "-"}</td>
+  //         <td>${item.PAYREQ_BankCharge || "-"}</td>
+  //         <td>${item.PAYREQ_RMK_INV || "-"}</td>
+  //       </tr>
+  //     `
+  //         )
+  //       )
+  //       .join("");
 
-      // Tabel HTML untuk "Table 3"
-      const table3HTML = `
-        <table border="1" width="100%" cellpadding="5" cellspacing="0">
-          <thead>
-            <tr>
-              <th>No.</th>
-              <th>Vendor Code</th>
-              <th>Vendor Name</th>
-              <th>Document No</th>
-              <th>Type</th>
-              <th>Date Outgoing</th>
-              <th>Total</th>
-              <th>Balance Due</th>
-              <th>Payment Amount</th>
-              <th>Bank Charge</th>
-              <th>Remarks Invoice</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${table3Data}
-          </tbody>
-        </table>
-      `;
+  //     // Tabel HTML untuk "Table 3"
+  //     const table3HTML = `
+  //       <table border="1" width="100%" cellpadding="5" cellspacing="0">
+  //         <thead>
+  //           <tr>
+  //             <th>No.</th>
+  //             <th>Vendor Code</th>
+  //             <th>Vendor Name</th>
+  //             <th>Document No</th>
+  //             <th>Type</th>
+  //             <th>Date Outgoing</th>
+  //             <th>Total</th>
+  //             <th>Balance Due</th>
+  //             <th>Payment Amount</th>
+  //             <th>Bank Charge</th>
+  //             <th>Remarks Invoice</th>
+  //           </tr>
+  //         </thead>
+  //         <tbody>
+  //           ${table3Data}
+  //         </tbody>
+  //       </table>
+  //     `;
 
-      console.log("Generated Table 3 HTML:", table3HTML);
+  //     console.log("Generated Table 3 HTML:", table3HTML);
 
-      // Mengirim email dengan data tambahan
-      const result = await emailjs.send(
-        "mjservice99",
-        "templatemj99",
-        {
-          name: "User 2",
-          PAYAPP_PerFrom,
-          PAYAPP_PerTo,
-          PAYAPP_DocType,
-          PAYAPP_DDocType,
-          PAYAPP_SeriesName,
-          PAYAPP_DocNum,
-          PAYAPP_Decision,
-          PAYAPP_AppDate,
-          PAYAPP_Remarks,
-          // Data dari Table 2
-          PAYAPP_DocNum_D,
-          PAYAPP_Date_D,
-          PAYAPP_Type_D,
-          PAYAPP_Total_D,
-          PAYAPP_CashFlow_D,
-          PAYAPP_RMK_D,
-          PAYAPP_REQ_D,
-          PAYREQ_DocNum_H,
-          // Data dari Table 3
-          table3HTML,
-        },
-        "wpMFQF0XbgvLIRP-G"
-      );
+  //     // Mengirim email dengan data tambahan
+  //     const result = await emailjs.send(
+  //       "mjservice99",
+  //       "template_t2mvj9c", //Template EmailJS PAYAPP2
+  //       {
+  //         name: "User 2",
+  //         PAYAPP_PerFrom,
+  //         PAYAPP_PerTo,
+  //         PAYAPP_DocType,
+  //         PAYAPP_DDocType,
+  //         PAYAPP_Department,
+  //         PAYAPP_SeriesName,
+  //         PAYAPP_DocNum,
+  //         PAYAPP_Decision,
+  //         PAYAPP_AppDate,
+  //         PAYAPP_Remarks,
+  //         // Data dari Table 2
+  //         PAYAPP_DocNum_D,
+  //         PAYAPP_Date_D,
+  //         PAYAPP_Total_D,
+  //         PAYREQ_DocNum_H,
+  //         // Data dari Table 3
+  //         table3HTML,
+  //       },
+  //       "wpMFQF0XbgvLIRP-G"
+  //     );
 
-      console.log("Email terkirim:", result.text);
-      Swal.fire("Sukses", "Email berhasil dikirim!", "success");
-    } catch (error) {
-      console.error("Error pengiriman email:", error);
-      Swal.fire("Error", "Gagal mengirim email!", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     console.log("Email terkirim:", result.text);
+  //     Swal.fire("Sukses", "Email berhasil dikirim!", "success");
+  //   } catch (error) {
+  //     console.error("Error pengiriman email:", error);
+  //     Swal.fire("Error", "Gagal mengirim email!", "error");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+  // const sendEmail = async () => {
+  //   setIsLoading(true);
+  
+  //   try {
+  //     const token = sessionStorage.getItem("authToken");
+  //     const cookieHeader = "B1SESSION=" + token + "; ROUTEID=.node6";
 
-//   const handleAdd = async () => {
-//     setIsLoading(true);
-//     const token = sessionStorage.getItem("authToken");
-//     const cookieHeader = "B1SESSION=" + token + "; ROUTEID=.node6";
+  //     // Lakukan GET request untuk setiap DocEntry yang dicentang
+  //     const queryPromises = selectedDocs.map((docEntry) =>
+  //       fetch(
+  //         `https://localhost:50000/b1s/v1/SQLQueries('GetPAYAPP2')/List?DocEntry=${docEntry}`,
+  //         {
+  //           method: "GET",
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //             Cookie: cookieHeader,
+  //           },
+  //           credentials: "include",
+  //         }
+  //       ).then((response) => {
+  //         if (!response.ok)
+  //           throw new Error("Gagal mengambil data untuk DocEntry " + docEntry);
+  //         return response.json();
+  //       })
+  //     );
+  
+  //     const queryResults = await Promise.all(queryPromises);
+  //     console.log("Query Results:", queryResults); // Debugging seluruh struktur data
 
-//     try {
-//         // Pastikan token ada
-//         if (!token) {
-//             throw new Error("Token autentikasi tidak ditemukan di sessionStorage.");
-//         }
+  
+  //     // Extract data dari queryResults
+  //     const PAYAPP_PerFrom = queryResults.map((result) => formatDate(result.PAYAPP_PerFrom || null)).join(", ");
+  //     const PAYAPP_PerTo = queryResults.map((result) => formatDate(result.PAYAPP_PerTo || null)).join(", ");
+  //     const PAYAPP_SeriesName = queryResults.map((result) => result.PAYAPP_SeriesName || "-").join(", ");
+  //     const PAYAPP_DocNum = queryResults.map((result) => result.PAYAPP_DocNum || "-").join(", ");
+  //     const PAYAPP_Department = queryResults.map((result) => result.PAYAPP_Department || "-").join(", ");
+  //     const PAYAPP_AppDate = queryResults.map((result) => formatDate(result.PAYAPP_AppDate || null)).join(", ");
+  //     const PAYAPP_Remarks = queryResults.map((result) => result.PAYAPP_Remarks || "-").join(", ");
+      
+  //     const PAYAPP_DocNum_D = queryResults.map((result) => result.PAYAPP_DocNum_D || "-").join(", ");
+  //     const PAYAPP_Date_D = queryResults.map((result) => result.PAYAPP_Date_D || "-").join(", ");
+  //     const PAYAPP_Department_D = queryResults.map((result) => result.PAYAPP_Department_D || "-").join(", ");
+  //     const PAYAPP_Total_D = queryResults.map((result) => result.PAYAPP_Total_D || "-").join(", ");
 
-//         // Langkah 1: Fetch data dari endpoint PAYREQ untuk mendapatkan U_SOL_DDOCTYPE
-//         const responsePayreq = await fetch("https://localhost:50000/b1s/v1/PAYAPP", {
-//             method: "GET",
-//             headers: {
-//                 "Content-Type": "application/json",
-//                 Cookie: cookieHeader,
-//             },
-//             credentials: "include",
-//         });
 
-//         if (!responsePayreq.ok) {
-//             // Ambil pesan error dari respons API jika ada
-//             const errorData = await responsePayreq.json();
-//             throw new Error(errorData.message || "Gagal mengambil data dari PAYREQ");
-//         }
+  //     // Buat tabel untuk Detail Payment Request
+  //     const table3Data = queryResults.flatMap((result, index) => `
+  //       <tr>
+  //         <td>${index + 1}</td>
+  //         <td>${result.PAYREQ_VenCode || "-"}</td>
+  //         <td>${result.PAYREQ_VenName || "-"}</td>
+  //         <td>${result.PAYREQ_DocNum || "-"}</td>
+  //         <td>${result.PAYREQ_Type || "-"}</td>
+  //         <td>${formatDate(result.PAYREQ_Date) || "-"}</td>
+  //         <td>${result.PAYREQ_Total || "-"}</td>
+  //         <td>${result.PAYREQ_BalDue || "-"}</td>
+  //         <td>${result.PAYREQ_PayAmou || "-"}</td>
+  //         <td>${result.PAYREQ_BankCharge || "-"}</td>
+  //         <td>${result.PAYREQ_RMK_INV || "-"}</td>
+  //       </tr>
+  //     `).join("");
+  
+  //     const table3HTML = `
+  //       <table border="1" width="100%" cellpadding="5" cellspacing="0">
+  //         <thead>
+  //           <tr>
+  //             <th>No.</th>
+  //             <th>Vendor Code</th>
+  //             <th>Vendor Name</th>
+  //             <th>Document No</th>
+  //             <th>Type</th>
+  //             <th>Due Date</th>
+  //             <th>Total</th>
+  //             <th>Balance Due</th>
+  //             <th>Payment Amount</th>
+  //             <th>Bank Charge</th>
+  //             <th>Remarks Invoice</th>
+  //           </tr>
+  //         </thead>
+  //         <tbody>
+  //           ${table3Data}
+  //         </tbody>
+  //       </table>
+  //     `;
+  //     console.log("Generated Table 3 HTML:", table3HTML);
+      
+  //     // Mengirim email dengan data tambahan
+  //     const result = await emailjs.send(
+  //       "mjservice99",
+  //       "template_t2mvj9c",
+  //       {
+  //         name: "User 2",
+  //         PAYAPP_PerFrom,
+  //         PAYAPP_PerTo,
+  //         PAYAPP_SeriesName,
+  //         PAYAPP_DocNum,
+  //         PAYAPP_Department,
+  //         PAYAPP_AppDate,
+  //         PAYAPP_Remarks,
+  //         //Tabel 2
+  //         PAYAPP_DocNum_D,
+  //         PAYAPP_Date_D,
+  //         PAYAPP_Department_D,
+  //         PAYAPP_Total_D,
+  //         table3HTML
+  //       },
+  //       "wpMFQF0XbgvLIRP-G"
+  //     );
+  //     console.log("Email sent:", result.text);
+  //     Swal.fire("Sukses", "Email berhasil dikirim!", "success");
+  //   } catch (error) {
+  //     console.error("Error sending email:", error);
+  //     Swal.fire("Error", "Gagal mengirim email!", "error");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
-//         const payreqData = await responsePayreq.json();
-//         const U_SOL_DDOCTYPE = payreqData.value[0]?.U_SOL_DDOCTYPE || "FA";
+// const handleAdd = async () => {
+//   setIsLoading(true);
+//   const token = sessionStorage.getItem("authToken");
+//   const cookieHeader = "B1SESSION=" + token + "; ROUTEID=.node6";
 
-//         // Langkah 2: Siapkan data untuk POST ke endpoint PAYAPP
-//         const selectedDocumentsData = documents
-//             .filter((doc) => selectedDocs.includes(doc.DocEntry))
-//             .map((doc) => ({
-//                 U_SOL_SELECT: "Y",
-//                 U_SOL_DESIC: "3",
-//                 U_SOL_DOCNUM_D: doc.DocNum,
-//                 //U_SOL_BPNAME: doc.U_SOL_BPNAME || "",
-//                 //U_SOL_DATE_D: doc.U_SOL_POSTDATE,
-//                 //U_SOL_TIPE: doc.Object,
-//                 U_SOL_TOTAL: doc.SOL_PAYAPP_DCollection[0]?.U_SOL_TOTAL || 0,
-//                 U_SOL_CASHFLOW: doc.U_SOL_CASHFLOW,
-//                 U_SOL_RMK: doc.U_SOL_RMK,
-//                 U_SOL_REQ: doc.SOL_PAYAPP_DCollection[0]?.U_SOL_REQ || '-',
-//             }));
+//   try {
+//       // Pastikan token ada
+//       if (!token) {
+//           throw new Error("Token autentikasi tidak ditemukan di sessionStorage.");
+//       }
 
-//         const requestBody = {
-//             U_SOL_PERFROM: inputsPayreq.DateFrom,
-//             U_SOL_PERTO: inputsPayreq.DateTo,
-//             U_SOL_DOCTYPE: "Department",
-//             U_SOL_DDOCTYPE: U_SOL_DDOCTYPE, // Gunakan nilai dari PAYREQ
-//             U_SOL_APPDATE: new Date().toISOString(),
-//             U_SOL_DECISION2: "2",
-//             U_SOL_DECISION3: "3",
-//             U_SOL_DECISION4: "3",
-//             U_SOL_RMK: remarks,
-//             SOL_PAYAPP_DCollection: selectedDocumentsData,
-//         };
+//       // Langkah 1: Fetch data dari endpoint PAYREQ untuk mendapatkan U_SOL_DDOCTYPE
+//       const responsePayreq = await fetch("https://localhost:50000/b1s/v1/PAYAPP", {
+//         method: "GET",
+//         headers: {
+//             "Content-Type": "application/json",
+//             Cookie: cookieHeader,
+//         },
+//         credentials: "include",
+//     });
 
-//         // Langkah 3: Kirim data ke endpoint PAYAPP
-//         const postResponse = await fetch("https://localhost:50000/b1s/v1/PAYAPP2", {
-//             method: "POST",
-//             headers: {
-//                 "Content-Type": "application/json",
-//                 Cookie: cookieHeader,
-//             },
-//             body: JSON.stringify(requestBody),
-//             credentials: "include",
-//         });
-
-//         if (postResponse.ok) {
-//             Swal.fire("Success", "Documents updated and posted successfully!", "success");
-//             setSelectedDocs([]);
-//             await handleSearch();
-//             await sendEmail(); // Mengirim email setelah POST berhasil
-//         } else {
-//             const errorData = await postResponse.json();
-//             throw new Error(errorData.message || "Failed to post data to PAYAPP");
-//         }
-//     } catch (error) {
-//         console.error("Terjadi error:", error.message);
-//         setErrorMessage(error.message || "Network error, please try again later.");
-//     } finally {
-//         setIsLoading(false);
+//     if (!responsePayreq.ok) {
+//         // Ambil pesan error dari respons API jika ada
+//         const errorData = await responsePayreq.json();
+//         throw new Error(errorData.message || "Gagal mengambil data dari PAYREQ");
 //     }
+
+//     const payreqData = await responsePayreq.json();
+//     const U_SOL_DDOCTYPE = payreqData.value[0]?.U_SOL_DDOCTYPE || "";
+
+//       // Langkah 2: Siapkan data untuk POST ke endpoint PAYAPP2
+//       const selectedDocumentsData = documents
+//           .filter((doc) => selectedDocs.includes(doc.DocEntry))
+//           .map((doc) => ({
+//               U_SOL_SELECT: "Y",
+//               U_SOL_DOCNUM_D: doc.DocNum,
+//               U_SOL_DATE_D: doc.U_SOL_APPDATE,
+//               U_SOL_SERIES: doc.U_SOL_SERIES,
+//               U_SOL_DEPARTMENT: doc.U_SOL_DEPARTMENT,
+//               U_SOL_COSTCENTER: doc.U_SOL_COSTCENTER,
+//               U_SOL_TOTAL: doc.SOL_PAYAPP_DCollection.reduce((sum, record) => sum + (record.U_SOL_TOTAL || 0), 0)
+              
+//           }));
+
+//       const requestBody = {
+//           U_SOL_PERFROM: inputsPayreq.DateFrom,
+//           U_SOL_PERTO: inputsPayreq.DateTo,
+//           U_SOL_SERIES: inputsPayreq.Series,
+//           U_SOL_DEPARTMENT: inputsPayreq.DDocType,
+//           U_SOL_COSTCENTER: inputsPayreq.CostCenter,
+//           U_SOL_APPDATE: new Date().toISOString(),
+//           U_SOL_RMK: remarks || "No Remarks", // Nilai default jika kosong
+//           SOL_PAYAPP2_DCollection: selectedDocumentsData,
+//       };
+
+//       console.log("Request Body:", JSON.stringify(requestBody, null, 2));
+
+//       // Langkah 3: Kirim data ke endpoint PAYAPP2
+//       const postResponse = await fetch("https://localhost:50000/b1s/v1/PAYAPP2", {
+//           method: "POST",
+//           headers: {
+//               "Content-Type": "application/json",
+//               Cookie: cookieHeader,
+//           },
+//           body: JSON.stringify(requestBody),
+//           credentials: "include",
+//       });
+
+//       if (postResponse.ok) {
+//           Swal.fire("Success", "Documents updated and posted successfully!", "success");
+//           setSelectedDocs([]);
+//           await handleSearch();
+//           await sendEmail(); // Mengirim email setelah POST berhasil
+//       } else {
+//           const errorData = await postResponse.json();
+//           console.error("Error response from server:", errorData);
+//           throw new Error(errorData.message || "Failed to post data to PAYAPP2");
+//           console.log(requestBody);
+//       }
+//   } catch (error) {
+//       console.error("Terjadi error:", error.message);
+//       setErrorMessage(error.message || "Network error, please try again later.");
+//   } finally {
+//       setIsLoading(false);
+//   }
 // };
+
+// Modifikasi sendEmail agar bisa menerima data dari GetPAYAPP2 sebagai parameter
+const sendEmail = async (queryResults) => {
+  setIsLoading(true);
+
+  try {
+    // Ekstraksi data dari queryResults untuk email payload
+    const PAYAPP_PerFrom = queryResults.map((result) => formatDate(result.PAYAPP_PerFrom || null)).join(", ");
+    const PAYAPP_PerTo = queryResults.map((result) => formatDate(result.PAYAPP_PerTo || null)).join(", ");
+    const PAYAPP_SeriesName = queryResults.map((result) => result.PAYAPP_SeriesName || "-").join(", ");
+    const PAYAPP_DocNum = queryResults.map((result) => result.PAYAPP_DocNum || "-").join(", ");
+    const PAYAPP_Department = queryResults.map((result) => result.PAYAPP_Department || "-").join(", ");
+    const PAYAPP_AppDate = queryResults.map((result) => formatDate(result.PAYAPP_AppDate || null)).join(", ");
+    const PAYAPP_Remarks = queryResults.map((result) => result.PAYAPP_Remarks || "-").join(", ");
+    
+    const PAYAPP_DocNum_D = queryResults.map((result) => result.PAYAPP_DocNum_D || "-").join(", ");
+    const PAYAPP_Date_D = queryResults.map((result) => formatDate(result.PAYAPP_Date_D || null)).join(", ");
+    const PAYAPP_Department_D = queryResults.map((result) => result.PAYAPP_Department_D || "-").join(", ");
+    const PAYAPP_Total_D = queryResults.map((result) => result.PAYAPP_Total_D || "-").join(", ");
+
+    // Tabel untuk Detail Payment Request
+    const table3Data = queryResults.flatMap((result, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${result.PAYREQ_VenCode || "-"}</td>
+        <td>${result.PAYREQ_VenName || "-"}</td>
+        <td>${result.PAYREQ_DocNum || "-"}</td>
+        <td>${result.PAYREQ_Type || "-"}</td>
+        <td>${formatDate(result.PAYREQ_Date) || "-"}</td>
+        <td>${result.PAYREQ_Total || "-"}</td>
+        <td>${result.PAYREQ_BalDue || "-"}</td>
+        <td>${result.PAYREQ_PayAmou || "-"}</td>
+        <td>${result.PAYREQ_BankCharge || "-"}</td>
+        <td>${result.PAYREQ_RMK_INV || "-"}</td>
+      </tr>
+    `).join("");
+
+    const table3HTML = `
+      <table border="1" width="100%" cellpadding="5" cellspacing="0">
+        <thead>
+          <tr>
+            <th>No.</th>
+            <th>Vendor Code</th>
+            <th>Vendor Name</th>
+            <th>Document No</th>
+            <th>Type</th>
+            <th>Date</th>
+            <th>Total</th>
+            <th>Balance Due</th>
+            <th>Payment Amount</th>
+            <th>Bank Charge</th>
+            <th>Remarks Invoice</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${table3Data}
+        </tbody>
+      </table>
+    `;
+
+    // Payload email
+    const emailPayload = {
+      name: "User 2",
+      PAYAPP_PerFrom,
+      PAYAPP_PerTo,
+      PAYAPP_SeriesName,
+      PAYAPP_DocNum,
+      PAYAPP_Department,
+      PAYAPP_AppDate,
+      PAYAPP_Remarks,
+      PAYAPP_DocNum_D,
+      PAYAPP_Date_D,
+      PAYAPP_Department_D,
+      PAYAPP_Total_D,
+      table3HTML,
+    };
+
+    // Kirim email
+    const result = await emailjs.send(
+      "mjservice99",
+      "template_payapp3",
+      emailPayload,
+      "wpMFQF0XbgvLIRP-G"
+    );
+    console.log("Email sent:", result.text);
+    Swal.fire("Sukses", "Email berhasil dikirim!", "success");
+  } catch (error) {
+    console.error("Error sending email:", error);
+    Swal.fire("Error", "Gagal mengirim email!", "error");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
 const handleAdd = async () => {
   setIsLoading(true);
@@ -447,83 +660,108 @@ const handleAdd = async () => {
   const cookieHeader = "B1SESSION=" + token + "; ROUTEID=.node6";
 
   try {
-      // Pastikan token ada
-      if (!token) {
-          throw new Error("Token autentikasi tidak ditemukan di sessionStorage.");
-      }
+    // Pastikan token ada
+    if (!token) {
+      throw new Error("Token autentikasi tidak ditemukan di sessionStorage.");
+    }
 
-      // Langkah 1: Fetch data dari endpoint PAYREQ untuk mendapatkan U_SOL_DDOCTYPE
-      // const responsePayreq = await fetch("https://localhost:50000/b1s/v1/PAYREQ", {
-      //     method: "GET",
-      //     headers: {
-      //         "Content-Type": "application/json",
-      //         Cookie: cookieHeader,
-      //     },
-      //     credentials: "include",
-      // });
+    // Fetch data dari endpoint PAYREQ untuk mendapatkan U_SOL_DDOCTYPE
+    const responsePayreq = await fetch("https://localhost:50000/b1s/v1/PAYAPP", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: cookieHeader,
+      },
+      credentials: "include",
+    });
 
-      // if (!responsePayreq.ok) {
-      //     const errorData = await responsePayreq.json();
-      //     throw new Error(errorData.message || "Gagal mengambil data dari PAYREQ");
-      // }
+    if (!responsePayreq.ok) {
+      const errorData = await responsePayreq.json();
+      throw new Error(errorData.message || "Gagal mengambil data dari PAYREQ");
+    }
 
-      //const payreqData = await responsePayreq.json();
-      //const U_SOL_DDOCTYPE = payreqData.value[0]?.U_SOL_DDOCTYPE || "FA";
+    const payreqData = await responsePayreq.json();
+    const U_SOL_DDOCTYPE = payreqData.value[0]?.U_SOL_DDOCTYPE || "";
 
-      // Langkah 2: Siapkan data untuk POST ke endpoint PAYAPP2
-      const selectedDocumentsData = documents
-          .filter((doc) => selectedDocs.includes(doc.DocEntry))
-          .map((doc) => ({
-              U_SOL_SELECT: "Y",
-              U_SOL_DOCNUM_D: doc.DocNum,
-              U_SOL_DATE_D: doc.U_SOL_APPDATE,
-              U_SOL_SERIES: doc.U_SOL_SERIES,
-              U_SOL_DEPARTMENT: doc.U_SOL_DEPARTMENT,
-              U_SOL_COSTCENTER: doc.U_SOL_COSTCENTER,
-              U_SOL_TOTAL: doc.SOL_PAYAPP_DCollection.reduce((sum, record) => sum + (record.U_SOL_TOTAL || 0), 0)
-              
-          }));
+    // Siapkan data untuk POST ke endpoint PAYAPP2
+    const selectedDocumentsData = documents
+      .filter((doc) => selectedDocs.includes(doc.DocEntry))
+      .map((doc) => ({
+        U_SOL_SELECT: "Y",
+        U_SOL_DOCNUM_D: doc.DocNum,
+        U_SOL_DATE_D: doc.U_SOL_APPDATE,
+        U_SOL_SERIES: doc.U_SOL_SERIES,
+        U_SOL_DEPARTMENT: doc.U_SOL_DEPARTMENT,
+        U_SOL_COSTCENTER: doc.U_SOL_COSTCENTER,
+        U_SOL_TOTAL: doc.SOL_PAYAPP_DCollection.reduce((sum, record) => sum + (record.U_SOL_TOTAL || 0), 0)
+      }));
 
-      const requestBody = {
-          U_SOL_PERFROM: inputsPayreq.DateFrom,
-          U_SOL_PERTO: inputsPayreq.DateTo,
-          U_SOL_SERIES: inputsPayreq.Series,
-          U_SOL_DEPARTMENT: inputsPayreq.DDocType,
-          U_SOL_COSTCENTER: inputsPayreq.CostCenter,
-          U_SOL_APPDATE: new Date().toISOString(),
-          U_SOL_RMK: remarks || "No Remarks", // Nilai default jika kosong
-          SOL_PAYAPP2_DCollection: selectedDocumentsData,
-      };
+    const requestBody = {
+      U_SOL_PERFROM: inputsPayreq.DateFrom,
+      U_SOL_PERTO: inputsPayreq.DateTo,
+      U_SOL_SERIES: inputsPayreq.Series,
+      U_SOL_DEPARTMENT: inputsPayreq.DDocType,
+      U_SOL_COSTCENTER: inputsPayreq.CostCenter,
+      U_SOL_APPDATE: new Date().toISOString(),
+      U_SOL_RMK: remarks || "No Remarks", // Nilai default jika kosong
+      SOL_PAYAPP2_DCollection: selectedDocumentsData,
+    };
 
-      console.log("Request Body:", JSON.stringify(requestBody, null, 2));
+    console.log("Request Body:", JSON.stringify(requestBody, null, 2));
 
-      // Langkah 3: Kirim data ke endpoint PAYAPP2
-      const postResponse = await fetch("https://localhost:50000/b1s/v1/PAYAPP2", {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-              Cookie: cookieHeader,
-          },
-          body: JSON.stringify(requestBody),
-          credentials: "include",
-      });
+    // Langkah 1: POST ke endpoint PAYAPP2
+    const postResponse = await fetch("https://localhost:50000/b1s/v1/PAYAPP2", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: cookieHeader,
+      },
+      body: JSON.stringify(requestBody),
+      credentials: "include",
+    });
 
-      if (postResponse.ok) {
-          Swal.fire("Success", "Documents updated and posted successfully!", "success");
-          setSelectedDocs([]);
-          await handleSearch();
-          await sendEmail(); // Mengirim email setelah POST berhasil
-      } else {
-          const errorData = await postResponse.json();
-          console.error("Error response from server:", errorData);
-          throw new Error(errorData.message || "Failed to post data to PAYAPP2");
-          console.log(requestBody);
-      }
+    if (!postResponse.ok) {
+      const errorData = await postResponse.json();
+      console.error("Error response from server:", errorData);
+      throw new Error(errorData.message || "Failed to post data to PAYAPP2");
+    }
+
+    // Langkah 2: Ambil DocEntry dari respons POST
+    const postResult = await postResponse.json();
+    const newDocEntry = postResult.DocEntry;  // Ambil DocEntry dari hasil POST
+    console.log("DocEntry dari POST:", newDocEntry);
+
+    // Langkah 3: Lakukan GET request ke SQL GetPAYAPP2 dengan DocEntry yang baru
+    const getResponse = await fetch(`https://localhost:50000/b1s/v1/SQLQueries('GetPAYAPP2')/List?DocEntry=${newDocEntry}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: cookieHeader,
+      },
+      credentials: "include",
+    });
+
+    if (!getResponse.ok) {
+      const errorData = await getResponse.json();
+      console.error("Error response from server (GET GetPAYAPP2):", errorData);
+      throw new Error(errorData.message || "Failed to get data from GetPAYAPP2");
+    }
+
+    // Langkah 4: Ambil data dari respons GET
+    const getResult = await getResponse.json();
+    console.log("Data dari GET GetPAYAPP2:", getResult);
+
+    // Langkah 5: Kirim email setelah data GET diterima
+    await sendEmail(getResult.value); // Lanjutkan ke fungsi sendEmail dengan data dari GetPAYAPP2
+
+    Swal.fire("Success", "Documents updated, posted, and email sent successfully!", "success");
+    setSelectedDocs([]);
+    await handleSearch(); // Refresh setelah berhasil
   } catch (error) {
-      console.error("Terjadi error:", error.message);
-      setErrorMessage(error.message || "Network error, please try again later.");
+    console.error("Terjadi error:", error.message);
+    setErrorMessage(error.message || "Network error, please try again later.");
   } finally {
-      setIsLoading(false);
+    setIsLoading(false);
   }
 };
 

@@ -316,7 +316,7 @@ const Approval1 = () => {
       // Mengirim email dengan data tambahan
       const result = await emailjs.send(
         "mjservice99",
-        "templatemj99",
+        "template_payapp2",
         {
           name: "User 2",
           PAYAPP_PerFrom,

@@ -702,6 +702,7 @@ const handleAdd = async () => {
       U_SOL_SERIES: inputsPayreq.Series,
       U_SOL_DEPARTMENT: inputsPayreq.DDocType,
       U_SOL_COSTCENTER: inputsPayreq.CostCenter,
+      U_SOL_DECISION: "1",
       U_SOL_APPDATE: new Date().toISOString(),
       U_SOL_RMK: remarks || "No Remarks", // Nilai default jika kosong
       SOL_PAYAPP2_DCollection: selectedDocumentsData,

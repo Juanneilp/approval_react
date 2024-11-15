@@ -297,8 +297,20 @@ const handleAdd = async () => {
         U_SOL_SERIES: doc.U_SOL_SERIES,
         U_SOL_DEPARTMENT: doc.U_SOL_DEPARTMENT,
         U_SOL_COSTCENTER: doc.U_SOL_COSTCENTER,
-        U_SOL_TOTAL: doc.SOL_PAYAPP_DCollection.reduce((sum, record) => sum + (record.U_SOL_TOTAL || 0), 0)
+        U_SOL_TOTAL: Array.isArray(doc.SOL_PAYAPP_DCollection)
+        ? doc.SOL_PAYAPP3_DCollection.reduce(
+            (sum, record) => sum + (record.U_SOL_TOTAL || 0),
+            0
+          )
+        : 0,
       }));
+
+      if (selectedDocumentsData.length === 0) {
+        console.error("Tidak ada dokumen yang dipilih untuk ditambahkan.");
+        Swal.fire("Error", "Pilih setidaknya satu dokumen untuk ditambahkan.", "error");
+        return;
+      }
+      
 
     const requestBody = {
       U_SOL_PERFROM: inputsPayreq.DateFrom,
@@ -307,11 +319,12 @@ const handleAdd = async () => {
       U_SOL_DEPARTMENT: inputsPayreq.DDocType,
       U_SOL_COSTCENTER: inputsPayreq.CostCenter,
       U_SOL_APPDATE: new Date().toISOString(),
+      U_SOL_DECISION: "1",
       U_SOL_RMK: remarks || "No Remarks", // Nilai default jika kosong
-      SOL_PAYAPP2_DCollection: selectedDocumentsData,
+      SOL_PAYAPP3_DCollection: selectedDocumentsData,
     };
 
-    console.log("Request Body:", JSON.stringify(requestBody, null, 2));
+    console.log("Request Body Sent:", JSON.stringify(requestBody, null, 2));
 
     // Langkah 1: POST ke endpoint PAYAPP3
     const postResponse = await fetch("https://localhost:50000/b1s/v1/PAYAPP3", {
@@ -326,9 +339,10 @@ const handleAdd = async () => {
 
     if (!postResponse.ok) {
       const errorData = await postResponse.json();
-      console.error("Error response from server:", errorData);
-      throw new Error(errorData.message || "Failed to post data to PAYAPP3");
+      console.error("Error response from server (POST PAYAPP3):", errorData);
+      throw new Error(errorData.error?.message?.value || "Failed to post data to PAYAPP3");
     }
+    
 
     // Langkah 2: Ambil DocEntry dari respons POST
     const postResult = await postResponse.json();
@@ -461,16 +475,18 @@ const GetCashFlow = async (lineItemId) => {
 
   useEffect(() => {
     const calculatedTotalSum = documents.reduce((docSum, doc) => {
-      // Calculate the sum of U_SOL_TOTAL for the current document's SOL_PAYAPP_DCollection
-      const docTotal = doc.SOL_PAYAPP_DCollection.reduce(
-        (sum, record) => sum + (record.U_SOL_TOTAL || 0), 
-        0
-      );
+      const docTotal = Array.isArray(doc.SOL_PAYAPP_DCollection)
+        ? doc.SOL_PAYAPP_DCollection.reduce(
+            (sum, record) => sum + (record.U_SOL_TOTAL || 0),
+            0
+          )
+        : 0;
       return docSum + docTotal;
     }, 0);
   
     setTotalSum(calculatedTotalSum);
   }, [documents]);
+  
   
 
   return (
@@ -669,9 +685,12 @@ const GetCashFlow = async (lineItemId) => {
                             {/* <td>{formatCurr(doc.SOL_PAYAPP_DCollection[0]?.U_SOL_TOTAL || 0)}</td> */}
                             <td>
                               {formatCurr(
-                                doc.SOL_PAYAPP_DCollection.reduce((sum, record) => sum + (record.U_SOL_TOTAL || 0), 0)
+                                Array.isArray(doc.SOL_PAYAPP_DCollection)
+                                  ? doc.SOL_PAYAPP_DCollection.reduce((sum, record) => sum + (record.U_SOL_TOTAL || 0), 0)
+                                  : 0
                               )}
                             </td>
+
                           </tr>
                         ))
                       ) : (

@@ -21,16 +21,63 @@ const Approval3 = () => {
   const [latestDocNum, setLatestDocNum] = useState(""); // State for latest DocNum
   const [cashFlowNames, setCashFlowNames] = useState({}); // Store LineItemName by DocEntry
   const [remarks, setRemarks] = useState(""); // State untuk Remarks
+  const [departmentOptions, setDepartmentOptions] = useState([]); 
 
+  // Fetch data department dari endpoint SQL Query
+  const fetchDepartments = async () => {
+    try {
+      const token = sessionStorage.getItem("authToken");
+      const cookieHeader = "B1SESSION=" + token + "; ROUTEID=.node6";
+
+      const response = await fetch(
+        "https://localhost:50000/b1s/v1/SQLQueries('GetDepartment')/List",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: cookieHeader,
+          },
+          credentials: "include",
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const departments = data.value.map((item) => item.Name);
+        setDepartmentOptions(departments);
+
+        // Set nilai default jika belum diatur
+        if (!inputsPayreq.DDocType && departments.length > 0) {
+          setInputsPayreq((prev) => ({
+            ...prev,
+            //DDocType: departments[0], // Default ke opsi pertama
+          }));
+        }
+      } else {
+        console.error("Failed to fetch departments:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
 
   const handleInputPayreq = (value, key) => {
+    if (key === "DDocType" && !departmentOptions.includes(value)) {
+      console.error("Invalid value for Department:", value);
+      return; // Abaikan jika nilai tidak valid
+    }
+    
     const newInputsPayreq = { ...inputsPayreq };
     newInputsPayreq[key] = value;
     setInputsPayreq(newInputsPayreq);
   };
 
   const handleLogin = async (e) => {
-    e.preventDefault();
+    //e.preventDefault();
 
     try {
       const response = await fetch("https://localhost:50000/b1s/v1/Login", {
@@ -105,7 +152,7 @@ const Approval3 = () => {
 
   const handleSearch = async (e) => {
     try {
-      e.preventDefault();
+      //e.preventDefault();
       setIsLoading(true);
       handleLogin(e);
   
@@ -123,7 +170,7 @@ const Approval3 = () => {
       const formattedDateFrom = formatDateToYYYYMMDD(inputsPayreq.DateFrom);
       const formattedDateTo = formatDateToYYYYMMDD(inputsPayreq.DateTo);
   
-      const searchUrl = `https://localhost:50000/b1s/v1/PAYAPP2?$filter= U_SOL_APPDATE ge '${formattedDateFrom}' and U_SOL_APPDATE le '${formattedDateTo}'`;
+      const searchUrl = `https://localhost:50000/b1s/v1/PAYAPP?$filter= U_SOL_DECISION eq '1' and U_SOL_DECISION2 eq '1' and U_SOL_DECISION3 eq '3'  and U_SOL_APPDATE ge '${formattedDateFrom}' and U_SOL_APPDATE le '${formattedDateTo}'`;
       const url = inputsPayreq.DDocType
         ? `${searchUrl} and U_SOL_DEPARTMENT eq '${inputsPayreq.DDocType}'`
         : searchUrl;
@@ -171,18 +218,20 @@ const sendEmail = async (queryResults) => {
 
   try {
     // Ekstraksi data dari queryResults untuk email payload
-    const PAYAPP_PerFrom = queryResults.map((result) => formatDate(result.PAYAPP_PerFrom || null)).join(", ");
-    const PAYAPP_PerTo = queryResults.map((result) => formatDate(result.PAYAPP_PerTo || null)).join(", ");
-    const PAYAPP_SeriesName = queryResults.map((result) => result.PAYAPP_SeriesName || "-").join(", ");
-    const PAYAPP_DocNum = queryResults.map((result) => result.PAYAPP_DocNum || "-").join(", ");
-    const PAYAPP_Department = queryResults.map((result) => result.PAYAPP_Department || "-").join(", ");
-    const PAYAPP_AppDate = queryResults.map((result) => formatDate(result.PAYAPP_AppDate || null)).join(", ");
-    const PAYAPP_Remarks = queryResults.map((result) => result.PAYAPP_Remarks || "-").join(", ");
+    const PAYAPP_PerFrom = formatDate(queryResults[0]?.PAYAPP_PerFrom || null);
+    const PAYAPP_PerTo = formatDate(queryResults[0]?.PAYAPP_PerTo || null);
+    const PAYAPP_SeriesName = queryResults[0]?.PAYAPP_SeriesName || "-";
+    const PAYAPP_DocNum = queryResults[0]?.PAYAPP_DocNum || "-";
+    const PAYAPP_Department = queryResults[0]?.PAYAPP_Department || "-";
+    const PAYAPP_AppDate = formatDate(queryResults[0]?.PAYAPP_AppDate || null);
+    const PAYAPP_Remarks = queryResults[0]?.PAYAPP_Remarks || "-";
+    const PAYREQ_DocNum_H = queryResults[0]?.PAYREQ_DocNum_H || "-";
     
-    const PAYAPP_DocNum_D = queryResults.map((result) => result.PAYAPP_DocNum_D || "-").join(", ");
-    const PAYAPP_Date_D = queryResults.map((result) => formatDate(result.PAYAPP_Date_D || null)).join(", ");
-    const PAYAPP_Department_D = queryResults.map((result) => result.PAYAPP_Department_D || "-").join(", ");
-    const PAYAPP_Total_D = queryResults.map((result) => result.PAYAPP_Total_D || "-").join(", ");
+    const PAYAPP_DocNum_D = queryResults[0]?.PAYAPP_DocNum_D || "-";
+    const PAYAPP_Date_D = formatDate(queryResults[0]?.PAYAPP_Date_D || null);
+    const PAYAPP_Department_D = queryResults[0]?.PAYAPP_Department_D || "-";
+    const PAYAPP_Total_D = queryResults[0]?.PAYAPP_Total_D || "-";
+    
 
     // Tabel untuk Detail Payment Request
     const table3Data = queryResults.flatMap((result, index) => `
@@ -193,10 +242,10 @@ const sendEmail = async (queryResults) => {
         <td>${result.PAYREQ_DocNum || "-"}</td>
         <td>${result.PAYREQ_Type || "-"}</td>
         <td>${formatDate(result.PAYREQ_Date) || "-"}</td>
-        <td>${result.PAYREQ_Total || "-"}</td>
-        <td>${result.PAYREQ_BalDue || "-"}</td>
-        <td>${result.PAYREQ_PayAmou || "-"}</td>
-        <td>${result.PAYREQ_BankCharge || "-"}</td>
+        <td>${formatCurr(result.PAYREQ_Total) || "-"}</td>
+        <td>${formatCurr(result.PAYREQ_BalDue) || "-"}</td>
+        <td>${formatCurr(result.PAYREQ_PayAmou) || "-"}</td>
+        <td>${formatCurr(result.PAYREQ_BankCharge) || "-"}</td>
         <td>${result.PAYREQ_RMK_INV || "-"}</td>
       </tr>
     `).join("");
@@ -226,7 +275,7 @@ const sendEmail = async (queryResults) => {
 
     // Payload email
     const emailPayload = {
-      name: "User 2",
+      name: "Fira",
       PAYAPP_PerFrom,
       PAYAPP_PerTo,
       PAYAPP_SeriesName,
@@ -238,6 +287,7 @@ const sendEmail = async (queryResults) => {
       PAYAPP_Date_D,
       PAYAPP_Department_D,
       PAYAPP_Total_D,
+      PAYREQ_DocNum_H,
       table3HTML,
     };
 
@@ -281,11 +331,10 @@ const handleAdd = async () => {
 
     if (!responsePayreq.ok) {
       const errorData = await responsePayreq.json();
-      throw new Error(errorData.message || "Gagal mengambil data dari PAYREQ");
+      throw new Error(errorData.message || "Gagal mengambil data dari PAYAPP2");
     }
 
     const payreqData = await responsePayreq.json();
-    const U_SOL_DDOCTYPE = payreqData.value[0]?.U_SOL_DDOCTYPE || "";
 
     // Siapkan data untuk POST ke endpoint PAYAPP2
     const selectedDocumentsData = documents
@@ -298,19 +347,19 @@ const handleAdd = async () => {
         U_SOL_DEPARTMENT: doc.U_SOL_DEPARTMENT,
         U_SOL_COSTCENTER: doc.U_SOL_COSTCENTER,
         U_SOL_TOTAL: Array.isArray(doc.SOL_PAYAPP_DCollection)
-        ? doc.SOL_PAYAPP3_DCollection.reduce(
-            (sum, record) => sum + (record.U_SOL_TOTAL || 0),
-            0
-          )
-        : 0,
+          ? doc.SOL_PAYAPP_DCollection.reduce(
+              (sum, record) => sum + (record.U_SOL_TOTAL || 0),
+              0
+            )
+          : 0,
+        DocEntry: doc.DocEntry,
       }));
 
-      if (selectedDocumentsData.length === 0) {
-        console.error("Tidak ada dokumen yang dipilih untuk ditambahkan.");
-        Swal.fire("Error", "Pilih setidaknya satu dokumen untuk ditambahkan.", "error");
-        return;
-      }
-      
+    if (selectedDocumentsData.length === 0) {
+      console.error("Tidak ada dokumen yang dipilih untuk ditambahkan.");
+      Swal.fire("Error", "Pilih setidaknya satu dokumen untuk ditambahkan.", "error");
+      return;
+    }
 
     const requestBody = {
       U_SOL_PERFROM: inputsPayreq.DateFrom,
@@ -320,7 +369,7 @@ const handleAdd = async () => {
       U_SOL_COSTCENTER: inputsPayreq.CostCenter,
       U_SOL_APPDATE: new Date().toISOString(),
       U_SOL_DECISION: "1",
-      U_SOL_RMK: remarks || "No Remarks", // Nilai default jika kosong
+      U_SOL_RMK: remarks || "", // Nilai default jika kosong
       SOL_PAYAPP3_DCollection: selectedDocumentsData,
     };
 
@@ -342,11 +391,10 @@ const handleAdd = async () => {
       console.error("Error response from server (POST PAYAPP3):", errorData);
       throw new Error(errorData.error?.message?.value || "Failed to post data to PAYAPP3");
     }
-    
 
     // Langkah 2: Ambil DocEntry dari respons POST
     const postResult = await postResponse.json();
-    const newDocEntry = postResult.DocEntry;  // Ambil DocEntry dari hasil POST
+    const newDocEntry = postResult.DocEntry; // Ambil DocEntry dari hasil POST
     console.log("DocEntry dari POST:", newDocEntry);
 
     // Langkah 3: Lakukan GET request ke SQL GetPAYAPP2 dengan DocEntry yang baru
@@ -372,6 +420,31 @@ const handleAdd = async () => {
     // Langkah 5: Kirim email setelah data GET diterima
     await sendEmail(getResult.value); // Lanjutkan ke fungsi sendEmail dengan data dari GetPAYAPP2
 
+    // Langkah 6: UPDATE field U_SOL_DECISION3 pada endpoint PAYAPP menggunakan DocEntry dari dokumen yang dipilih
+    for (const doc of selectedDocumentsData) {
+      const updatePayload = {
+        U_SOL_DECISION3: "1"
+      };
+
+      const updateResponse = await fetch(`https://localhost:50000/b1s/v1/PAYAPP(${doc.DocEntry})`, {
+        method: "PATCH", // Menggunakan PATCH untuk melakukan update sebagian
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: cookieHeader,
+        },
+        body: JSON.stringify(updatePayload),
+        credentials: "include",
+      });
+
+      if (!updateResponse.ok) {
+        const errorData = await updateResponse.json();
+        console.error(`Error updating DocEntry ${doc.DocEntry}:`, errorData);
+        throw new Error(errorData.message || `Failed to update U_SOL_DECISION3 for DocEntry ${doc.DocEntry}`);
+      }
+
+      console.log(`Update berhasil pada field U_SOL_DECISION3 untuk DocEntry ${doc.DocEntry}`);
+    }
+
     Swal.fire("Success", "Documents updated, posted, and email sent successfully!", "success");
     setSelectedDocs([]);
     await handleSearch(); // Refresh setelah berhasil
@@ -382,6 +455,7 @@ const handleAdd = async () => {
     setIsLoading(false);
   }
 };
+
 
   // Mendapatkan tanggal hari ini dalam format YYYY-MM-DD
   const todayDate = new Date().toISOString().split("T")[0];
@@ -554,20 +628,25 @@ const GetCashFlow = async (lineItemId) => {
                       </div>
 
                       <div className="d-flex align-items-center mb-2">
-                        <label className="me-2">Department</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="DDocType"
-                          id="DDocType"
-                          required
-                          autoComplete="off"
-                          autoFocus
-                          onChange={(e) =>
-                            handleInputPayreq(e.target.value, e.target.name)
-                          }
-                        />
-                      </div>
+                      <label className="me-2" style={{ width: "120px" }}>
+                        Department <span style={{ color: "red" }}>*</span>
+                      </label>
+                      <select
+                        className="form-control"
+                        name="DDocType"
+                        value={inputsPayreq.DDocType}
+                        onChange={(e) => handleInputPayreq(e.target.value, e.target.name)}
+                      >
+                        <option value="" disabled>
+                          Select Department
+                        </option>
+                        {departmentOptions.map((department, index) => (
+                          <option key={index} value={department}>
+                            {department}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
                       <div className="d-flex align-items-center mb-2">
                         <label className="me-2">CostCenter</label>
@@ -682,7 +761,6 @@ const GetCashFlow = async (lineItemId) => {
                             <td>{doc.U_SOL_SERIES}</td>
                             <td>{doc.U_SOL_DEPARTMENT}</td>
                             <td>{doc.U_SOL_COSTCENTER}</td>
-                            {/* <td>{formatCurr(doc.SOL_PAYAPP_DCollection[0]?.U_SOL_TOTAL || 0)}</td> */}
                             <td>
                               {formatCurr(
                                 Array.isArray(doc.SOL_PAYAPP_DCollection)

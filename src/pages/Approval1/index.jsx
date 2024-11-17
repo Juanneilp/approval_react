@@ -266,6 +266,7 @@ const Approval1 = () => {
           U_SOL_CASHFLOW: cashFlowName,
           U_SOL_RMK: doc.U_SOL_RMK,
           U_SOL_REQ: doc.U_SOL_REQ,
+          DocEntry: doc.DocEntry
         };
       });
   
@@ -283,6 +284,31 @@ const Approval1 = () => {
         U_SOL_RMK: remarks,
         SOL_PAYAPP_DCollection: selectedDocumentsData,
       };
+
+      // Langkah 2: PATCH ke endpoint PAYREQ untuk setiap DocEntry
+      for (const doc of selectedDocumentsData) {
+      const updatePayload = {
+        U_SOL_STATUS: "2", // Status update
+      };
+
+      const patchResponse = await fetch(`https://localhost:50000/b1s/v1/PAYREQ(${doc.DocEntry})`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: cookieHeader,
+        },
+        body: JSON.stringify(updatePayload),
+        credentials: "include",
+      });
+
+      if (!patchResponse.ok) {
+        const errorData = await patchResponse.json();
+        console.error(`Gagal melakukan PATCH PAYREQ U_SOL_STATUS untuk DocEntry ${doc.DocEntry}:`, errorData.message);
+        throw new Error(errorData.message || `PATCH PAYREQ U_SOL_STATUS failed for DocEntry ${doc.DocEntry}`);
+      }
+
+      console.log(`PATCH berhasil untuk DocEntry ${doc.DocEntry}`);
+    }
   
       // Langkah 3: Kirim data ke endpoint PAYAPP
       const postResponse = await fetch("https://localhost:50000/b1s/v1/PAYAPP", {

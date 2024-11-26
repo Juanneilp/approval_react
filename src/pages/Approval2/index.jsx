@@ -279,7 +279,7 @@ const sendEmail = async (queryResults) => {
 
     // Payload email
     const emailPayload = {
-      name: "Jaya",
+      name: "Juan",
       PAYAPP_PerFrom,
       PAYAPP_PerTo,
       PAYAPP_SeriesName,
@@ -324,7 +324,7 @@ const handleAdd = async () => {
     }
 
     // Fetch data dari endpoint PAYREQ untuk mendapatkan U_SOL_DDOCTYPE
-    const responsePayreq = await fetch("https://localhost:50000/b1s/v1/PAYAPP", {
+    const responsePayreq = await fetch("https://localhost:50000/b1s/v1/PAYREQ", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -351,7 +351,7 @@ const handleAdd = async () => {
         U_SOL_DEPARTMENT: doc.U_SOL_DEPARTMENT,
         U_SOL_COSTCENTER: doc.U_SOL_COSTCENTER,
         U_SOL_TOTAL: doc.SOL_PAYAPP_DCollection.reduce((sum, record) => sum + (record.U_SOL_TOTAL || 0), 0),
-        DocEntry: doc.DocEntry // Tambahkan DocEntry untuk keperluan update nanti
+        DocEntry: doc.DocEntry
       }));
 
     const requestBody = {
@@ -414,7 +414,7 @@ const handleAdd = async () => {
     await sendEmail(getResult.value); // Lanjutkan ke fungsi sendEmail dengan data dari GetPAYAPP2
     console.log("ini data getResult", getResult.value[0]);
 
-    // Langkah 6: UPDATE field U_SOL_DECISION2 = "1" pada endpoint PAYAPP menggunakan DocEntry dari dokumen yang dipilih
+    // Langkah 6: UPDATE field U_SOL_DECISION2 pada PAYAPP
     for (const doc of selectedDocumentsData) {
       const updatePayload = {
         U_SOL_DECISION2: "1"
@@ -439,9 +439,44 @@ const handleAdd = async () => {
       console.log(`Update berhasil pada field U_SOL_DECISION2 untuk DocEntry ${doc.DocEntry}`);
     }
 
+    // Langkah 7: UPDATE field U_SOL_RMK2 pada endpoint PAYREQ menggunakan DocEntry dari langkah 3
+    if (getResult.value && getResult.value.length > 0) {
+      for (const item of getResult.value) {
+        const docEntryFromGet = item.PAYREQ_DocNum_H; // Ambil field PAYREQ_DocNum_H dari hasil GET GetPAYAPP2
+
+        const updatePayload = {
+          U_SOL_RMKAPP2: remarks || "",
+        };
+
+        try {
+          const updateResponse = await fetch(`https://localhost:50000/b1s/v1/PAYREQ(${docEntryFromGet})`, {
+            method: "PATCH", // Menggunakan PATCH untuk melakukan update sebagian
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: cookieHeader,
+            },
+            body: JSON.stringify(updatePayload),
+            credentials: "include",
+          });
+
+          if (!updateResponse.ok) {
+            const errorData = await updateResponse.json();
+            console.error(`Error updating U_SOL_RMKAPP2 for DocEntry ${docEntryFromGet}:`, errorData);
+            throw new Error(errorData.message || `Failed to update U_SOL_RMKAPP2 for DocEntry ${docEntryFromGet}`);
+          }
+
+          console.log(`Update berhasil pada field U_SOL_RMKAPP2 untuk DocEntry ${docEntryFromGet}`);
+        } catch (error) {
+          console.error(`Terjadi error saat update U_SOL_RMKAPP2 untuk DocEntry ${docEntryFromGet}:`, error.message);
+        }
+      }
+    } else {
+      console.error("Data GetPAYAPP2 tidak ditemukan atau kosong, tidak ada yang diupdate pada PAYREQ.");
+    }
+
     Swal.fire("Success", "Documents updated, posted, and email sent successfully!", "success");
-    setSelectedDocs([]);
-    await handleSearch(); // Refresh setelah berhasil
+    setSelectedDocs([]); // Clear selected docs
+    await handleSearch(); // Refresh data after success
   } catch (error) {
     console.error("Terjadi error:", error.message);
     setErrorMessage(error.message || "Network error, please try again later.");
@@ -449,6 +484,7 @@ const handleAdd = async () => {
     setIsLoading(false);
   }
 };
+
 
 
   // Mendapatkan tanggal hari ini dalam format YYYY-MM-DD

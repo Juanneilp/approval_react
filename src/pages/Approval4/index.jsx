@@ -329,7 +329,8 @@ const Approval3 = () => {
         if (Array.isArray(payappData.SOL_PAYAPP_DCollection)) {
           for (const item of payappData.SOL_PAYAPP_DCollection) {
             const updatePayloadPAYREQ = {
-              U_SOL_STATUS: "3"
+              U_SOL_STATUS: "3",
+              U_SOL_RMKAPP4: remarks
             };
   
             // Log U_SOL_DOCNUM_D yang akan digunakan

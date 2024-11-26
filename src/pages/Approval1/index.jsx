@@ -257,7 +257,6 @@ const Approval1 = () => {
 
         return {
           U_SOL_SELECT: "Y",
-          U_SOL_DESIC: "3",
           U_SOL_DOCNUM_D: doc.DocNum,
           U_SOL_BPNAME: doc.U_SOL_BPNAME || "",
           U_SOL_DATE_D: doc.U_SOL_POSTDATE,
@@ -289,6 +288,7 @@ const Approval1 = () => {
       for (const doc of selectedDocumentsData) {
       const updatePayload = {
         U_SOL_STATUS: "2", // Status update
+        U_SOL_RMKAPP: remarks || ""
       };
 
       const patchResponse = await fetch(`https://localhost:50000/b1s/v1/PAYREQ(${doc.DocEntry})`, {
@@ -383,8 +383,6 @@ const Approval1 = () => {
       // Langkah 2: Ekstrak data untuk email
       const PAYAPP_PerFrom = formatDate(data[0]?.PAYAPP_PerFrom);
       const PAYAPP_PerTo = formatDate(data[0]?.PAYAPP_PerTo);
-      const PAYAPP_DocType = data[0]?.PAYAPP_DocType || "-";
-      const PAYAPP_DDocType = data[0]?.PAYAPP_DDocType || "-";
       const PAYAPP_SeriesName = data[0]?.PAYAPP_SeriesName || "-";
       const PAYAPP_DocNum = data[0]?.PAYAPP_DocNum || "-";
       const PAYAPP_Decision = data[0]?.PAYAPP_Decision || "-";
@@ -449,11 +447,9 @@ const Approval1 = () => {
         "mjservice99",
         "template_payapp2",
         {
-          name: "Juan",
+          name: "Fira",
           PAYAPP_PerFrom,
           PAYAPP_PerTo,
-          PAYAPP_DocType,
-          PAYAPP_DDocType,
           PAYAPP_SeriesName,
           PAYAPP_DocNum,
           PAYAPP_Decision,

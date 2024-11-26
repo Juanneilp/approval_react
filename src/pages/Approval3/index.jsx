@@ -275,7 +275,7 @@ const sendEmail = async (queryResults) => {
 
     // Payload email
     const emailPayload = {
-      name: "Fira",
+      name: "Jaya",
       PAYAPP_PerFrom,
       PAYAPP_PerTo,
       PAYAPP_SeriesName,
@@ -397,7 +397,7 @@ const handleAdd = async () => {
     const newDocEntry = postResult.DocEntry; // Ambil DocEntry dari hasil POST
     console.log("DocEntry dari POST:", newDocEntry);
 
-    // Langkah 3: Lakukan GET request ke SQL GetPAYAPP2 dengan DocEntry yang baru
+    // Langkah 3: Lakukan GET request ke SQL GetPAYAPP3 dengan DocEntry yang baru
     const getResponse = await fetch(`https://localhost:50000/b1s/v1/SQLQueries('GetPAYAPP3')/List?DocEntry=${newDocEntry}`, {
       method: "GET",
       headers: {
@@ -419,7 +419,7 @@ const handleAdd = async () => {
 
     // Langkah 5: Kirim email setelah data GET diterima
     await sendEmail(getResult.value); // Lanjutkan ke fungsi sendEmail dengan data dari GetPAYAPP2
-
+    
     // Langkah 6: UPDATE field U_SOL_DECISION3 pada endpoint PAYAPP menggunakan DocEntry dari dokumen yang dipilih
     for (const doc of selectedDocumentsData) {
       const updatePayload = {
@@ -445,6 +445,41 @@ const handleAdd = async () => {
       console.log(`Update berhasil pada field U_SOL_DECISION3 untuk DocEntry ${doc.DocEntry}`);
     }
 
+    // Langkah 7: UPDATE field U_SOL_RMK3 pada endpoint PAYREQ menggunakan DocEntry dari langkah 3
+    if (getResult.value && getResult.value.length > 0) {
+      for (const item of getResult.value) {
+        const docEntryFromGet = item.PAYREQ_DocNum_H; // Ambil field PAYREQ_DocNum_H dari hasil GET GetPAYAPP3
+
+        const updatePayload = {
+          U_SOL_RMKAPP3: remarks || "",
+        };
+
+        try {
+          const updateResponse = await fetch(`https://localhost:50000/b1s/v1/PAYREQ(${docEntryFromGet})`, {
+            method: "PATCH", // Menggunakan PATCH untuk melakukan update sebagian
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: cookieHeader,
+            },
+            body: JSON.stringify(updatePayload),
+            credentials: "include",
+          });
+
+          if (!updateResponse.ok) {
+            const errorData = await updateResponse.json();
+            console.error(`Error updating U_SOL_RMKAPP3 for DocEntry ${docEntryFromGet}:`, errorData);
+            throw new Error(errorData.message || `Failed to update U_SOL_RMKAPP3 for DocEntry ${docEntryFromGet}`);
+          }
+
+          console.log(`Update berhasil pada field U_SOL_RMKAPP3 untuk DocEntry ${docEntryFromGet}`);
+        } catch (error) {
+          console.error(`Terjadi error saat update U_SOL_RMKAPP3 untuk DocEntry ${docEntryFromGet}:`, error.message);
+        }
+      }
+    } else {
+      console.error("Data GetPAYAPP3 tidak ditemukan atau kosong, tidak ada yang diupdate pada PAYREQ.");
+    }
+
     Swal.fire("Success", "Documents updated, posted, and email sent successfully!", "success");
     setSelectedDocs([]);
     await handleSearch(); // Refresh setelah berhasil
@@ -455,6 +490,7 @@ const handleAdd = async () => {
     setIsLoading(false);
   }
 };
+
 
 
   // Mendapatkan tanggal hari ini dalam format YYYY-MM-DD
